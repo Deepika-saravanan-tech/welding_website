@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login</title>
+  <style>
+    body, * {
+      box-sizing: border-box;
+    }
+
+    .login_page {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: linear-gradient(#aec6ed, #ecf1f8, #e2ebf9);
+    }
+
+    .login_container {
+      width: 420px;
+      font-family: 'Times New Roman', Times, serif;
+      background: radial-gradient(#ecf1f8, #e2ebf9, #aec6ed);
+      padding: 34px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+
+    .login_heading {
+      font-family: 'Times New Roman', Times, serif;
+      text-align: center;
+      font-size: 26px;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .login_form-group {
+      margin-bottom: 18px;
+      position: relative;
+    }
+
+    .login_label {
+      font-size: 16px;
+      font-family: 'Times New Roman', Times, serif;
+      font-weight: bold;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .login_input {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    .login_btn {
+      width: 100%;
+      padding: 14px;
+      font-size: 18px;
+      background: #4e73df;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .login_btn:hover {
+      background: #375ac8;
+    }
+
+    .back_btn {
+      background: #6c757d;
+      margin-top: 10px;
+    }
+
+    .back_btn:hover {
+      background: #5a6268;
+    }
+
+    .login_error-msg {
+      text-align: center;
+      color: red;
+      margin-top: 14px;
+      font-size: 15px;
+      min-height: 18px;
+    }
+
+    .show_password_label {
+      font-size: 14px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="login_page">
+    <div class="login_container">
+      <h2 class="login_heading">Admin Login</h2>
+
+      <!-- Secure login form -->
+      <form id="login_form" autocomplete="off">
+        <div class="login_form-group">
+          <label for="login_username" class="login_label">Email</label>
+          <input id="login_username" class="login_input" type="email" placeholder="Enter email" required autocomplete="off">
+        </div>
+
+        <div class="login_form-group">
+          <label for="login_password" class="login_label">Password</label>
+          <!-- dummy hidden input to trick browser autofill -->
+          <input type="password" style="display:none">
+          <input id="login_password" class="login_input" type="password" placeholder="Enter password" required autocomplete="new-password">
+          <div style="margin-top:5px;">
+            <input type="checkbox" id="show_password">
+            <label for="show_password" class="show_password_label">Show Password</label>
+          </div>
+        </div>
+
+        <button type="submit" class="login_btn">Login</button>
+        <button type="button" id="back_btn" class="login_btn back_btn">Back</button>
+      </form>
+
+      <p id="login_error" class="login_error-msg"></p>
+    </div>
+  </div>
+
+  <script>
+    const DEMO_EMAIL = "vigneshwaraweldingwork@gmail.com";
+    const DEMO_PASS = "vigweld@2006";
+
+    const loginForm = document.getElementById("login_form");
+    const loginError = document.getElementById("login_error");
+    const passwordInput = document.getElementById("login_password");
+    const showPasswordCheckbox = document.getElementById("show_password");
+    const backBtn = document.getElementById("back_btn");
+
+    // Show/hide password toggle
+    showPasswordCheckbox.addEventListener("change", () => {
+      passwordInput.type = showPasswordCheckbox.checked ? "text" : "password";
+    });
+
+    // Login form submit
+    loginForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const email = document.getElementById("login_username").value.trim();
+      const pass = passwordInput.value;
+
+      if(email === DEMO_EMAIL && pass === DEMO_PASS){
+        window.location.href = "workers.html";
+      } else {
+        loginError.textContent = "Invalid email or password!";
+        setTimeout(() => loginError.textContent = "", 3000);
+      }
+    });
+
+    // Back button click
+    backBtn.addEventListener("click", () => {
+      window.location.href = "index.html";
+    });
+  </script>
+</body>
+</html>
