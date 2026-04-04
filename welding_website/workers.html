@@ -1,0 +1,942 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Workers Management</title>
+<style>
+:root {
+  --primary:#0b6cf0;
+  --accent:#20c997;
+  --muted:#6c757d;
+  --danger:#dc3545;
+  --card:#fff;
+  --bg:#f5f8ff;
+}
+body {
+  font-family: Inter, Arial, Helvetica, sans-serif;
+  margin: 0; padding: 16px;
+  background: linear-gradient(180deg, #f7fbff, #eef6ff);
+}
+body.tamil {
+  font-family: 'Noto Sans Tamil', 'Latha', 'Arial Unicode MS', Arial, sans-serif;
+}
+.date_display {
+  position: fixed; top: 12px; left: 12px;
+  background: linear-gradient(135deg, var(--primary), #054d9b);
+  color: #fff; padding: 10px 14px; border-radius: 10px;
+  font-weight: 700; font-size: 18px;
+  box-shadow: 0 6px 18px rgba(10, 40, 80, 0.12);
+  z-index: 1000;
+}
+.lang_menu {
+  position: fixed; top: 12px; right: 12px; z-index: 1000;
+}
+.lang_btn {
+  background: none; border: none; font-size: 22px;
+  cursor: pointer; color: var(--primary);
+}
+.lang_dropdown {
+  display: none; position: absolute; right: 0; margin-top: 8px;
+  background: var(--card); border-radius: 8px;
+  box-shadow: 0 8px 28px rgba(10, 40, 80, 0.12);
+  overflow: hidden;
+}
+.lang_dropdown.show {
+  display: block;
+}
+.lang_dropdown button {
+  display: block; padding: 8px 14px; border: 0; background:none;
+  width: 160px; text-align: left; cursor: pointer;
+}
+.lang_dropdown button:hover {
+  background: #f2f6ff;
+}
+header {
+  max-width: 1100px; margin: 60px auto 10px; text-align: center;
+}
+h1 {
+  margin: 0; font-size: 24px; color: #06395f;
+}
+.container {
+  max-width: 1100px; margin: 18px auto; padding: 14px;
+  background: transparent;
+}
+.card {
+  background: var(--card); border-radius: 12px;
+  padding: 14px; box-shadow: 0 8px 30px rgba(10, 40, 80, 0.04);
+  margin-bottom: 16px;
+}
+form.row {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  align-items: center; justify-content: center;
+}
+form.row input, form.row select {
+  padding: 10px; border: 1px solid #d7dee9;
+  border-radius: 8px; font-size: 15px; min-width: 150px;
+}
+input[readonly] {
+  background: #f7f9fc;
+}
+button.btn {
+  padding: 10px 18px; border-radius: 8px; border: 0;
+  cursor: pointer; font-weight: 700;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), #054d9b);
+  color: #fff;
+}
+.btn-accent {
+  background: var(--accent); color: #fff;
+}
+.btn-grey {
+  background: var(--muted); color: #fff;
+}
+.btn-danger {
+  background: var(--danger); color: #fff;
+}
+table {
+  width: 100%; border-collapse: collapse; font-size: 14px;
+}
+th, td {
+  padding: 10px; border-bottom: 1px solid #eef3fb;
+  text-align: center; vertical-align: middle;
+}
+thead th {
+  background: #f2f8ff; color: #0b3b66; font-weight: 700;
+}
+.actions button {
+  margin: 0 4px; padding: 6px 10px;
+  border-radius: 6px; border: 0; cursor: pointer;
+}
+.actions .edit {
+  background: #ffd54a;
+  margin-bottom: 15px;
+}
+.actions .del {
+  background: #fff; border: 2px solid #ff6b6b; color: #c0392b;
+}
+.flex {
+  display: flex; gap: 12px; align-items: center;
+  justify-content: center; flex-wrap: wrap;
+}
+.muted {
+  color: #6b7280; font-size: 13px;
+}
+.hidden {
+  display: none;
+}
+.filter-section {
+  background: #f8fbff; border: 2px solid #e3f2fd; border-radius: 10px;
+  padding: 16px; margin-bottom: 16px;
+}
+.filter-active {
+  background: linear-gradient(135deg, var(--accent), #0f9d6a) !important;
+  color: white !important;
+  border-color: var(--accent) !important;
+}
+/* Updated professional summary card matching your theme */
+.summary-card {
+  background: linear-gradient(135deg, var(--primary), #054d9b); 
+  color: white; text-align: center; padding: 20px;
+  border-radius: 12px; margin-bottom: 16px;
+  box-shadow: 0 10px 30px rgba(11, 108, 240, 0.2);
+}
+.summary-card h3 {
+  margin: 0 0 8px 0; font-size: 20px; font-weight: 700;
+}
+.summary-date {
+  font-size: 16px; font-weight: 600; opacity: 0.95;
+}
+/* Professional totals table */
+.totals-table {
+  background: var(--card);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(10, 40, 80, 0.08);
+  margin-top: 0;
+}
+.totals-table thead th {
+  background: linear-gradient(135deg, var(--primary), #054d9b);
+  color: white;
+  font-weight: 700;
+  font-size: 15px;
+  padding: 14px 10px;
+}
+.totals-table tbody tr {
+  border-bottom: 1px solid #eef3fb;
+  transition: background 0.2s;
+}
+.totals-table tbody tr:hover {
+  background: #f8fbff;
+}
+.totals-table tbody tr:last-child {
+  border-bottom: none;
+}
+.totals-table tbody td {
+  padding: 14px 10px;
+  font-size: 15px;
+}
+.totals-table .worker-name {
+  font-weight: 600;
+  color: #0b3b66;
+}
+.totals-table .amount {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--primary);
+}
+.totals-table .grand-total-row {
+  background: linear-gradient(135deg, var(--accent), #0f9d6a) !important;
+  color: white !important;
+}
+.totals-table .grand-total-row td {
+  font-weight: 700;
+  font-size: 16px;
+}
+</style>
+</head>
+<body>
+  <div class="date_display" id="date_display"></div>
+  <div class="lang_menu" id="lang_menu">
+    <button class="lang_btn">⋮</button>
+    <div class="lang_dropdown" id="lang_dropdown">
+      <button onclick="setLanguage('en')">English</button>
+      <button onclick="setLanguage('ta')">தமிழ்</button>
+    </div>
+  </div>
+  <header><h1 id="page_title">Workers Management</h1></header>
+  <div class="container">
+    <div id="daily_card" class="card">
+      <form id="workerForm" class="row" autocomplete="off">
+        <input id="name_input" placeholder="Name (type Tamil or English)" required />
+        <select id="time_input" required>
+          <option value="">Select Work-time</option>
+          <option value="Full-day">Full-day</option>
+          <option value="Half-day">Half-day</option>
+          <option value="Leave">Leave</option>
+        </select>
+        <input id="salary_input" type="number" placeholder="Salary" />
+        <input id="ot_input" type="number" placeholder="Overtime Amount" />
+        <input id="prepaid_input" type="number" placeholder="Prepaid Amount" />
+        <input id="remaining_input" type="number" placeholder="Remaining" readonly />
+        <input id="total_input" type="number" placeholder="Total" readonly />
+        <div style="min-width:140px;">
+          <button class="btn btn-primary" id="save_btn" type="submit">Add Worker</button>
+        </div>
+      </form>
+      <div style="margin-top:12px;">
+        <table id="daily_table">
+          <thead>
+            <tr>
+              <th id="th_date">Date</th>
+              <th id="th_name">Name</th>
+              <th id="th_worktime">Work-time</th>
+              <th id="th_salary">Salary</th>
+              <th id="th_ot">OT</th>
+              <th id="th_prepaid">Prepaid</th>
+              <th id="th_remaining">Remaining</th>
+              <th id="th_total">Total</th>
+              <th id="th_actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="daily_tbody"></tbody>
+        </table>
+      </div>
+      <div class="flex" style="margin-top:12px;">
+        <button class="btn btn-accent" id="gotoMonthly">Monthly Activity Tracking</button>
+        <button class="btn btn-grey" id="refreshBtn">Back</button>
+        <button class="btn btn-danger" id="clearAllBtn">Clear All Data</button>
+      </div>
+      <div class="muted" style="text-align:center;margin-top:8px;">
+        (Daily view shows only today's entries; monthly keeps history.)
+      </div>
+    </div>
+    
+    <div id="monthly_card" class="card hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+        <h2 id="monthly_title" style="margin:0">Monthly Activity Tracking</h2>
+        <div class="flex">
+          <button class="btn btn-primary" id="backToDaily">Back to Daily</button>
+          <button class="btn btn-danger" id="clearMonthlyBtn">Clear Monthly Data</button>
+        </div>
+      </div>
+
+      <!-- DATE RANGE FILTER SECTION -->
+      <div class="filter-section">
+        <div class="flex" style="justify-content:center; gap:12px; flex-wrap:wrap;">
+          <input type="date" id="fromDate" style="min-width:160px;">
+          <span style="font-weight:700; color:var(--primary);">to</span>
+          <input type="date" id="toDate" style="min-width:160px;">
+          <button class="btn btn-accent filter-btn" onclick="filterByDateRange()">Filter Totals</button>
+          <button class="btn btn-grey filter-btn" onclick="renderMonthly()">Full View</button>
+        </div>
+        <div id="filter_status" class="muted" style="text-align:center; margin-top:8px;"></div>
+      </div>
+
+      <!-- RESULTS CONTAINER -->
+      <div id="monthly_list" style="margin-top:12px;"></div>
+    </div>
+  </div>
+
+<script>
+const STORAGE_KEY = 'workersMonthly';
+
+function todayISO() {
+  const d = new Date();
+  const day = String(d.getDate()).padStart(2, '0');
+  const mo = String(d.getMonth() + 1).padStart(2, '0');
+  const y = d.getFullYear();
+  return `${day}-${mo}-${y}`;
+}
+
+function loadMonthly() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+
+function saveMonthly(arr) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+}
+
+function newRecord({ date, nameRaw, time, salary, ot, prepaid }) {
+  const s = Number(salary) || 0,
+    o = Number(ot) || 0,
+    p = Number(prepaid) || 0;
+  const total = s + o;
+  const remaining = total - p;
+  const storedName = nameRaw.trim();
+  return {
+    id: Date.now() + Math.random().toString(36).slice(2, 7),
+    date,
+    name_en: storedName,
+    name_ta: storedName,
+    time,
+    salary: s,
+    overtime: o,
+    prepaid: p,
+    total,
+    remaining,
+  };
+}
+
+const dateBadge = document.getElementById("date_display");
+function updateBadge() {
+  dateBadge.textContent = todayISO();
+}
+updateBadge();
+setInterval(updateBadge, 60000);
+
+let currentLang = "en";
+
+function setLanguage(lang) {
+  currentLang = lang;
+  if (lang === "ta") {
+    document.body.classList.add("tamil");
+    document.getElementById("page_title").textContent = "தொழிலாளர் மேலாண்மை";
+    document.getElementById("name_input").placeholder = "பெயர் (தமிழ் அல்லது ஆங்கிலம்)";
+    document.getElementById("salary_input").placeholder = "சம்பளம்";
+    document.getElementById("ot_input").placeholder = "அதிக நேரம் சம்பளம்";
+    document.getElementById("prepaid_input").placeholder = "முன்பணம்";
+    document.getElementById("save_btn").textContent = "சேர்";
+    document.getElementById("gotoMonthly").textContent = "மாதாந்திர செயல்பாடு";
+    document.getElementById("refreshBtn").textContent = "தொடர்க";
+    document.getElementById("clearAllBtn").textContent = "அனைத்து தரவுகளையும் அழி";
+    document.getElementById("monthly_title").textContent = "மாதாந்திர செயல்பாடு";
+    document.getElementById("backToDaily").textContent = "தினசரி காட்டு";
+    document.getElementById("clearMonthlyBtn").textContent = "மாதாந்திர தரவுகளை அழி";
+    document.querySelector('.filter-btn[onclick="filterByDateRange()"]').textContent = "தேதி வரம்பு";
+    document.querySelector('.filter-btn[onclick="renderMonthly()"]').textContent = "முழு பார்வை";
+    document.getElementById("th_date").textContent = "தேதி";
+    document.getElementById("th_name").textContent = "பெயர்";
+    document.getElementById("th_worktime").textContent = "வேலை நேரம்";
+    document.getElementById("th_salary").textContent = "சம்பளம்";
+    document.getElementById("th_ot").textContent = "அதிக நேரம் சம்பளம்";
+    document.getElementById("th_prepaid").textContent = "முன்பணம்";
+    document.getElementById("th_remaining").textContent = "மீதமுள்ள தொகை";
+    document.getElementById("th_total").textContent = "மொத்தம்";
+    document.getElementById("th_actions").textContent = "நிர்வாகம்";
+    document.getElementById(
+      "time_input"
+    ).innerHTML = `<option value="">வேலை நேரம் தேர்ந்தெடுக்கவும்</option><option value="Full-day">முழு நாள்</option><option value="Half-day">அரை நாள்</option><option value="Leave">விடுப்பு</option>`;
+  } else {
+    document.body.classList.remove("tamil");
+    document.getElementById("page_title").textContent = "Workers Management";
+    document.getElementById("name_input").placeholder =
+      "Name (type Tamil or English)";
+    document.getElementById("salary_input").placeholder = "Salary";
+    document.getElementById("ot_input").placeholder = "Overtime Amount";
+    document.getElementById("prepaid_input").placeholder = "Prepaid Amount";
+    document.getElementById("save_btn").textContent = "Add Worker";
+    document.getElementById("gotoMonthly").textContent =
+      "Monthly Activity Tracking";
+    document.getElementById("refreshBtn").textContent = "Back";
+    document.getElementById("clearAllBtn").textContent = "Clear All Data";
+    document.getElementById("monthly_title").textContent =
+      "Monthly Activity Tracking";
+    document.getElementById("backToDaily").textContent = "Back to Daily";
+    document.getElementById("clearMonthlyBtn").textContent = "Clear Monthly Data";
+    document.querySelector('.filter-btn[onclick="filterByDateRange()"]').textContent = "Filter Totals";
+    document.querySelector('.filter-btn[onclick="renderMonthly()"]').textContent = "Full View";
+    document.getElementById("th_date").textContent = "Date";
+    document.getElementById("th_name").textContent = "Name";
+    document.getElementById("th_worktime").textContent = "Work-time";
+    document.getElementById("th_salary").textContent = "Salary";
+    document.getElementById("th_ot").textContent = "OT";
+    document.getElementById("th_prepaid").textContent = "Prepaid";
+    document.getElementById("th_remaining").textContent = "Remaining";
+    document.getElementById("th_total").textContent = "Total";
+    document.getElementById("th_actions").textContent = "Actions";
+    document.getElementById(
+      "time_input"
+    ).innerHTML = `<option value="">Select Work-time</option><option value="Full-day">Full-day</option><option value="Half-day">Half-day</option><option value="Leave">Leave</option>`;
+  }
+  renderDaily();
+  renderMonthly();
+}
+
+document
+  .querySelector(".lang_btn")
+  .addEventListener("click", () =>
+    document.getElementById("lang_dropdown").classList.toggle("show")
+  );
+window.addEventListener("click", (e) => {
+  if (!document.getElementById("lang_menu").contains(e.target))
+    document.getElementById("lang_dropdown").classList.remove("show");
+});
+
+const form = document.getElementById("workerForm");
+const nameInput = document.getElementById("name_input");
+const timeInput = document.getElementById("time_input");
+const salaryInput = document.getElementById("salary_input");
+const otInput = document.getElementById("ot_input");
+const prepaidInput = document.getElementById("prepaid_input");
+const remainingInput = document.getElementById("remaining_input");
+const totalInput = document.getElementById("total_input");
+let editingId = null;
+
+function calculateLive() {
+  const s = Number(salaryInput.value) || 0;
+  const o = Number(otInput.value) || 0;
+  const p = Number(prepaidInput.value) || 0;
+  const total = s + o;
+  const remaining = total - p;
+  totalInput.value = total;
+  remainingInput.value = remaining;
+}
+[salaryInput, otInput, prepaidInput].forEach((el) =>
+  el.addEventListener("input", calculateLive)
+);
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const nameRaw = nameInput.value.trim();
+  if (!nameRaw) {
+    alert(currentLang === "ta" ? "பெயர் உள்ளிடவும்" : "Please enter a name");
+    return;
+  }
+  let name_en = nameRaw;
+  let name_ta = nameRaw;
+  if (currentLang === "en" && !/[\u0B80-\u0BFF]/.test(nameRaw)) {
+    try {
+      name_ta = await translateToTamil(nameRaw);
+    } catch {
+      name_ta = nameRaw;
+    }
+  }
+  if (currentLang === "ta" && /[\u0B80-\u0BFF]/.test(nameRaw)) {
+    try {
+      name_en = await translateToEnglish(nameRaw);
+    } catch {
+      name_en = nameRaw;
+    }
+  }
+  const rec = {
+    ...newRecord({
+      date: todayISO(),
+      nameRaw,
+      time: timeInput.value || "",
+      salary: salaryInput.value || 0,
+      ot: otInput.value || 0,
+      prepaid: prepaidInput.value || 0,
+    }),
+    name_en,
+    name_ta,
+  };
+  let arr = loadMonthly();
+  if (editingId) {
+    const idx = arr.findIndex((x) => x.id === editingId);
+    if (idx >= 0) {
+      arr[idx] = { ...arr[idx], ...rec, id: editingId, date: todayISO() };
+    }
+    editingId = null;
+    document.getElementById("save_btn").textContent =
+      currentLang === "ta" ? "சேர்" : "Add Worker";
+  } else {
+    arr.push(rec);
+  }
+  saveMonthly(arr);
+  form.reset();
+  totalInput.value = "";
+  remainingInput.value = "";
+  renderDaily();
+  renderMonthly();
+});
+
+function renderDaily() {
+  const data = loadMonthly().filter((r) => r.date === todayISO());
+  const tbody = document.getElementById("daily_tbody");
+  tbody.innerHTML = "";
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="9" class="small muted">${
+      currentLang === "ta" ? "இன்று எந்த பதிவுகளும் இல்லை" : "No entries for today"
+    }</td></tr>`;
+    return;
+  }
+  data.forEach((r) => {
+    const name = currentLang === "ta" ? r.name_ta : r.name_en;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${r.date}</td>
+      <td>${escapeHtml(name)}</td>
+      <td>${escapeHtml(r.time)}</td>
+      <td>${r.salary}</td>
+      <td>${r.overtime}</td>
+      <td>${r.prepaid}</td>
+      <td>${r.remaining}</td>
+      <td>${r.total}</td>
+      <td class="actions">
+        <button class="edit" title="${
+          currentLang === "ta" ? "புதுப்பிக்க" : "Edit"
+        }" onclick="editRecord('${r.id}')">Edit</button>
+        <button class="del" title="${
+          currentLang === "ta" ? "நீக்குக" : "Delete"
+        }" onclick="deleteRecord('${r.id}')">Delete</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function editRecord(id) {
+  const arr = loadMonthly();
+  const r = arr.find((x) => x.id === id);
+  if (!r) return;
+  editingId = id;
+  nameInput.value = currentLang === "ta" ? r.name_ta : r.name_en;
+  timeInput.value = r.time;
+  salaryInput.value = r.salary;
+  otInput.value = r.overtime;
+  prepaidInput.value = r.prepaid;
+  calculateLive();
+  document.getElementById("save_btn").textContent =
+    currentLang === "ta" ? "புதுப்பிக்க" : "Update Worker";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function deleteRecord(id) {
+  if (!confirm(currentLang === "ta" ? "உறுதியாக நீக்கிவிடவா?" : "Are you sure to delete this record?"))
+    return;
+  let arr = loadMonthly();
+  arr = arr.filter((x) => x.id !== id);
+  saveMonthly(arr);
+  renderDaily();
+  renderMonthly();
+}
+window.editRecord = editRecord;
+window.deleteRecord = deleteRecord;
+
+function convertToISO(dateStr) {
+  const [dd, mm, yyyy] = dateStr.split("-");
+  return `${yyyy}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;
+}
+
+// Updated professional date range filtering
+function filterByDateRange() {
+  const from = document.getElementById("fromDate").value;
+  const to = document.getElementById("toDate").value;
+  
+  if (!from || !to) {
+    alert(currentLang === "ta" ? "இரண்டு தேதிகளையும் தேர்ந்தெடுக்கவும்" : "Please select both dates");
+    return;
+  }
+  
+  if (from > to) {
+    alert(currentLang === "ta" ? "முதல் தேதி இரண்டாவது தேதியை விட சிறியதாக இருக்க வேண்டும்" : "From date must be before To date");
+    return;
+  }
+
+  const data = loadMonthly();
+  const filtered = data.filter((r) => {
+    const recordDate = convertToISO(r.date);
+    return recordDate >= from && recordDate <= to;
+  });
+
+  if (!filtered.length) {
+    document.getElementById("monthly_list").innerHTML =
+      `<div class="muted" style="text-align:center; padding:40px;"><h3>${currentLang === "ta" ? "தேர்ந்தெடுத்த வரம்பில் தரவு இல்லை" : "No data in selected date range"}</h3></div>`;
+    updateFilterStatus(from, to, 0);
+    return;
+  }
+
+  showDateRangeTotals(filtered, from, to);
+  updateFilterStatus(from, to, filtered.length);
+}
+
+function updateFilterStatus(from, to, count) {
+  const statusEl = document.getElementById("filter_status");
+  const fromDate = new Date(from);
+  const toDate = new Date(to);
+  const days = Math.ceil((toDate - fromDate) / (1000 * 60 * 60 * 24)) + 1;
+  
+  statusEl.innerHTML = `${currentLang === "ta" ? "فل터 செய்யப்பட்டது:" : "Filtered:"} ${days} ${currentLang === "ta" ? "நாட்கள்" : "days"} (${count} ${currentLang === "ta" ? "பதிவுகள்" : "records"})`;
+  statusEl.style.color = '#0b6cf0';
+}
+
+function showDateRangeTotals(filteredData, fromDate, toDate) {
+  const container = document.getElementById("monthly_list");
+  container.innerHTML = "";
+
+  // Professional summary card
+  const fromObj = new Date(fromDate);
+  const toObj = new Date(toDate);
+  const summary = document.createElement('div');
+  summary.className = 'summary-card';
+  summary.innerHTML = `
+    <h3>Date Range Total</h3>
+    <div class="summary-date">
+      ${fromObj.toLocaleDateString()} - ${toObj.toLocaleDateString()}
+    </div>
+  `;
+  if (currentLang === "ta") {
+    summary.innerHTML = `
+      <h3>தேதி வரம்பு மொத்தம்</h3>
+      <div class="summary-date">
+        ${fromObj.toLocaleDateString()} - ${toObj.toLocaleDateString()}
+      </div>
+    `;
+  }
+  container.appendChild(summary);
+
+  // Calculate totals by worker
+  let totals = {};
+  filteredData.forEach((r) => {
+    if (!totals[r.name_en]) {
+      totals[r.name_en] = {
+        en: r.name_en,
+        ta: r.name_ta,
+        total: 0,
+        count: 0
+      };
+    }
+    totals[r.name_en].total += Number(r.total);
+    totals[r.name_en].count += 1;
+  });
+
+  // Create professional totals table
+  const table = document.createElement("table");
+  table.className = "totals-table";
+  
+  let thead = `<thead><tr>
+    <th>${currentLang === "ta" ? "பணியாளர்" : "Worker"}</th>
+    <th>${currentLang === "ta" ? "மொத்த தொகை" : "Total Amount"}</th>
+    <th>${currentLang === "ta" ? "நாட்கள்" : "Days Worked"}</th>
+  </tr></thead>`;
+  
+  let tbody = "<tbody>";
+  let grandTotal = 0;
+  
+  Object.values(totals).sort((a, b) => b.total - a.total).forEach((w) => {
+    grandTotal += w.total;
+    tbody += `
+      <tr>
+        <td class="worker-name">${currentLang === "ta" ? w.ta : w.en}</td>
+        <td class="amount">₹${w.total.toLocaleString()}</td>
+        <td>${w.count}</td>
+      </tr>`;
+  });
+
+  // Grand total row
+  tbody += `
+    <tr class="grand-total-row">
+      <td colspan="2">${currentLang === "ta" ? "மொத்த மொத்தம்" : "GRAND TOTAL"}</td>
+      <td>₹${grandTotal.toLocaleString()}</td>
+    </tr>`;
+
+  tbody += "</tbody>";
+  table.innerHTML = thead + tbody;
+  container.appendChild(table);
+}
+
+// Original monthly view (Sunday totals)
+function renderMonthly() {
+  const arr = loadMonthly();
+  const container = document.getElementById("monthly_list");
+  container.innerHTML = "";
+  document.getElementById("filter_status").innerHTML = "";
+  
+  if (!arr.length) {
+    container.innerHTML = `<div class="muted">${
+      currentLang === "ta"
+        ? "இயற்கையாக எந்த மாதாந்திர பதிவுகளும் இல்லை."
+        : "No monthly records yet."
+    }</div>`;
+    return;
+  }
+
+  let allWorkers = {};
+  arr.forEach((r) => {
+    if (!allWorkers[r.name_en]) {
+      allWorkers[r.name_en] = { en: r.name_en, ta: r.name_ta };
+    }
+  });
+  const workerKeys = Object.keys(allWorkers);
+  let byDate = {};
+  arr.forEach((r) => {
+    if (!byDate[r.date]) byDate[r.date] = {};
+    byDate[r.date][r.name_en] = r.total;
+  });
+  const dates = Object.keys(byDate).sort((a, b) => {
+    const [da, ma, ya] = a.split("-").map(Number);
+    const [db, mb, yb] = b.split("-").map(Number);
+    return new Date(ya, ma - 1, da) - new Date(yb, mb - 1, db);
+  });
+
+  const table = document.createElement("table");
+  let thead = `<thead><tr><th>${
+    currentLang === "ta" ? "தேதி (நாள்)" : "Date (Day)"
+  }</th>`;
+  workerKeys.forEach((k) => {
+    const w = allWorkers[k];
+    thead += `<th>${currentLang === "ta" ? w.ta : w.en}</th>`;
+  });
+  thead += `<th>${currentLang === "ta" ? "நிர்வாகம்" : "Actions"}</th></tr></thead>`;
+
+  let tbody = "<tbody>";
+  let weekAccumulate = {};
+  let sundayTotals = {};
+  let lastRowWasSunday = false;
+
+  function isSunday(d) {
+    const [dd, mm, yy] = d.split("-").map(Number);
+    return new Date(yy, mm - 1, dd).getDay() === 0;
+  }
+  function getDayName(dateStr) {
+    const [dd, mm, yyyy] = dateStr.split("-").map(Number);
+    const days = [
+      "Sunday", "Monday", "Tuesday", "Wednesday",
+      "Thursday", "Friday", "Saturday",
+    ];
+    const dateObj = new Date(yyyy, mm - 1, dd);
+    return days[dateObj.getDay()];
+  }
+  function translateDay(day) {
+    const map = {
+      Sunday: "ஞாயிறு", Monday: "திங்கள்", Tuesday: "செவ்வாய்",
+      Wednesday: "புதன்", Thursday: "வியாழன்", Friday: "வெள்ளி", Saturday: "சனி",
+    };
+    return map[day] || day;
+  }
+
+  dates.forEach((d) => {
+    const dayName = getDayName(d);
+    tbody += `<tr><td>${d} (${
+      currentLang === "ta" ? translateDay(dayName) : dayName
+    })</td>`;
+    workerKeys.forEach((k) => {
+      const v = byDate[d][k] !== undefined ? byDate[d][k] : 0;
+      tbody += `<td>${v}</td>`;
+      weekAccumulate[k] = (weekAccumulate[k] || 0) + Number(v);
+    });
+    tbody += `<td><button class="btn btn-primary" onclick="editMonthlyRow('${d}')">${
+      currentLang === "ta" ? "மாற்று" : "Edit"
+    }</button> <button class="btn btn-danger" onclick="deleteWholeDay('${d}')">${
+      currentLang === "ta" ? "நீக்குக" : "Delete"
+    }</button></td></tr>`;
+
+    if (isSunday(d)) {
+      workerKeys.forEach((k) => {
+        sundayTotals[k] = (sundayTotals[k] || 0) + (weekAccumulate[k] || 0);
+      });
+      tbody += `<tr style="background:#f7fbff;font-weight:700"><td>${
+        currentLang === "ta" ? "ஞாயிறு வாராந்திர மொத்தம்" : "SUNDAY WEEKLY TOTAL"
+      }</td>`;
+      workerKeys.forEach((k) => {
+        tbody += `<td>${weekAccumulate[k] || 0}</td>`;
+      });
+      tbody += "<td></td></tr>";
+      weekAccumulate = {};
+      lastRowWasSunday = true;
+    } else {
+      lastRowWasSunday = false;
+    }
+  });
+
+  if (lastRowWasSunday) {
+    tbody += `<tr style="background:#eaf6fa;font-weight:700"><td>${
+      currentLang === "ta" ? "சரியான ஞாயிறு மொத்தம்" : "PERMANENT SUNDAY TOTAL"
+    }</td>`;
+    workerKeys.forEach((k) => {
+      tbody += `<td>${sundayTotals[k] || 0}</td>`;
+    });
+    tbody += "<td></td></tr>";
+  }
+
+  tbody += "</tbody>";
+  table.innerHTML = thead + tbody;
+  container.appendChild(table);
+}
+
+window.editMonthlyRow = function (date) {
+  const allRecords = loadMonthly();
+  const recordsToEdit = allRecords.filter((r) => r.date === date);
+  if (!recordsToEdit.length) return;
+  const container = document.getElementById("monthly_list");
+  container.innerHTML = "";
+  const form = document.createElement("form");
+  form.id = "editMonthlyForm";
+  form.innerHTML = `<h3>${
+    currentLang === "ta" ? "மாதாந்திர பதிவுகளை திருத்துக" : "Edit Monthly Records for"
+  } ${date}</h3>`;
+  recordsToEdit.forEach((rec, i) => {
+    form.innerHTML += `
+      <fieldset style="margin-bottom:10px; border:1px solid #ddd; padding:12px; border-radius:8px;">
+        <legend>${currentLang === "ta" ? "பணியாளர்" : "Worker"} ${i + 1}</legend>
+        <input type="hidden" name="id_${i}" value="${rec.id}" />
+        <label>${currentLang === "ta" ? "பெயர்" : "Name"}: <input name="name_en_${i}" value="${
+      currentLang === "ta" ? rec.name_ta : rec.name_en
+    }" readonly style="background:#eee; margin-left:6px;" /></label><br/>
+        <label>${currentLang === "ta" ? "வேலை நேரம்" : "Work Time"}: <input name="time_${i}" value="${
+      rec.time
+    }" style="margin-left:6px; width:120px;" /></label><br/>
+        <label>${currentLang === "ta" ? "சம்பளம்" : "Salary"}: <input type="number" name="salary_${i}" value="${rec.salary}" style="margin-left:6px; width:120px;" /></label><br/>
+        <label>${currentLang === "ta" ? "அதிக நேரம்" : "Overtime"}: <input type="number" name="ot_${i}" value="${
+      rec.overtime
+    }" style="margin-left:6px; width:120px;" /></label><br/>
+        <label>${currentLang === "ta" ? "முன்பணம்" : "Prepaid"}: <input type="number" name="prepaid_${i}" value="${rec.prepaid}" style="margin-left:6px; width:120px;" /></label>
+      </fieldset>
+    `;
+  });
+  form.innerHTML += `
+    <button type="submit" class="btn btn-primary">${
+    currentLang === "ta" ? "சேமி" : "Save"
+  }</button>
+    <button type="button" class="btn btn-grey" id="cancelEdit">${
+    currentLang === "ta" ? "ரத்து செய்" : "Cancel"
+  }</button>
+  `;
+  container.appendChild(form);
+  document.getElementById("cancelEdit").addEventListener("click", () => renderMonthly());
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const formData = new FormData(form);
+    let updated = false;
+    let data = loadMonthly();
+    recordsToEdit.forEach((rec, i) => {
+      const id = formData.get(`id_${i}`);
+      const index = data.findIndex((r) => r.id === id);
+      if (index > -1) {
+        data[index].time = formData.get(`time_${i}`) || data[index].time;
+        data[index].salary = Number(formData.get(`salary_${i}`)) || 0;
+        data[index].overtime = Number(formData.get(`ot_${i}`)) || 0;
+        data[index].prepaid = Number(formData.get(`prepaid_${i}`)) || 0;
+        data[index].total = data[index].salary + data[index].overtime;
+        data[index].remaining = data[index].total - data[index].prepaid;
+        updated = true;
+      }
+    });
+    if (updated) {
+      saveMonthly(data);
+      alert(currentLang === "ta" ? "மாற்றங்கள் சேமிக்கப்பட்டன" : "Changes saved");
+    }
+    renderMonthly();
+  });
+};
+
+window.deleteWholeDay = function (date) {
+  if (
+    !confirm(
+      currentLang === "ta"
+        ? `${date} இல் அனைத்து பதிவுகளையும் நீக்க விருமா? இது மாற்ற முடியாது.`
+        : "Delete all entries for " + date + "? This cannot be undone."
+    )
+  )
+    return;
+  const all = loadMonthly().filter((r) => r.date !== date);
+  saveMonthly(all);
+  renderMonthly();
+  renderDaily();
+};
+
+document.getElementById("gotoMonthly").addEventListener("click", () => {
+  document.getElementById("daily_card").classList.add("hidden");
+  document.getElementById("monthly_card").classList.remove("hidden");
+  renderMonthly();
+});
+document.getElementById("backToDaily").addEventListener("click", () => {
+  document.getElementById("monthly_card").classList.add("hidden");
+  document.getElementById("daily_card").classList.remove("hidden");
+  renderDaily();
+});
+document.getElementById("clearMonthlyBtn").addEventListener("click", () => {
+  if (
+    !confirm(
+      currentLang === "ta" ? "மாதாந்திர தரவுகளை அழிக்க விருமா?" : "Clear all monthly data?"
+    )
+  )
+    return;
+  localStorage.removeItem(STORAGE_KEY);
+  renderMonthly();
+  renderDaily();
+});
+document.getElementById("clearAllBtn").addEventListener("click", () => {
+  if (
+    !confirm(
+      currentLang === "ta"
+        ? "அனைத்து சேமிக்கப்பட்ட தரவுகளையும் அழிக்க விருமா?"
+        : "Clear ALL stored data (monthly + daily)?"
+    )
+  )
+    return;
+  localStorage.removeItem(STORAGE_KEY);
+  renderDaily();
+  renderMonthly();
+});
+document.getElementById("refreshBtn").addEventListener("click", () => {
+  window.location.href = "login.html";
+});
+
+function init() {
+  const arr = loadMonthly();
+  if (!Array.isArray(arr)) saveMonthly([]);
+  setLanguage("en");
+  renderDaily();
+  renderMonthly();
+}
+init();
+
+function escapeHtml(s) {
+  if (!s && s !== 0) return "";
+  return String(s).replace(/[&<>"']/g, (m) => {
+    return {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    }[m];
+  });
+}
+
+// Placeholder functions for translation (replace with actual implementation)
+async function translateToTamil(text) {
+  return text; // Replace with actual Tamil translation API
+}
+async function translateToEnglish(text) {
+  return text; // Replace with actual English translation API
+}
+</script>
+</body>
+</html>
