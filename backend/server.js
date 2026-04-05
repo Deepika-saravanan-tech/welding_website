@@ -9,9 +9,11 @@ const startServer = async () => {
 
   const server = http.createServer(app);
   initializeSocket(server);
+  const host = "0.0.0.0";
 
-  server.listen(env.port, () => {
-    console.log(`Server running on port ${env.port} in ${env.nodeEnv} mode`);
+  // Render expects the service to bind to an externally reachable interface.
+  server.listen(env.port, host, () => {
+    console.log(`Server running on ${host}:${env.port} in ${env.nodeEnv} mode`);
   });
 };
 
