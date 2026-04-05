@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login</title>
+  <style>
+    body, * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #304256;
+    }
+
+    .login_page {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      padding: 20px;
+      background: linear-gradient(180deg, #fff8dc 0%, #ffffff 52%, #fff3eb 100%);
+    }
+
+    .login_container {
+      width: 420px;
+      max-width: 100%;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #ffffff;
+      padding: 34px;
+      border: 1px solid rgba(208, 178, 0, 0.22);
+      border-radius: 18px;
+      box-shadow: 0 18px 40px rgba(48, 66, 86, 0.14);
+    }
+
+    .login_heading {
+      font-family: Arial, Helvetica, sans-serif;
+      text-align: center;
+      font-size: 28px;
+      margin-bottom: 24px;
+      color: #304256;
+    }
+
+    .login_form-group {
+      margin-bottom: 18px;
+      position: relative;
+    }
+
+    .login_label {
+      font-size: 16px;
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: bold;
+      margin-bottom: 8px;
+      display: block;
+      color: #304256;
+    }
+
+    .login_input {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      border: 1px solid rgba(48, 66, 86, 0.18);
+      border-radius: 10px;
+      background: #ffffff;
+      color: #304256;
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .login_input:focus {
+      outline: none;
+      border-color: #d0b200;
+      box-shadow: 0 0 0 4px rgba(208, 178, 0, 0.16);
+    }
+
+    .login_btn {
+      width: 100%;
+      padding: 14px;
+      font-size: 18px;
+      background: #fa660a;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .login_btn:hover {
+      background: #e45a05;
+      transform: translateY(-1px);
+      box-shadow: 0 10px 18px rgba(250, 102, 10, 0.2);
+    }
+
+    .back_btn {
+      background: #304256;
+      margin-top: 10px;
+    }
+
+    .back_btn:hover {
+      background: #243443;
+      box-shadow: 0 10px 18px rgba(48, 66, 86, 0.18);
+    }
+
+    .login_error-msg {
+      text-align: center;
+      color: #fa660a;
+      margin-top: 14px;
+      font-size: 15px;
+      min-height: 18px;
+    }
+
+    .show_password_label {
+      font-size: 14px;
+      cursor: pointer;
+      color: #304256;
+    }
+  </style>
+</head>
+<body>
+  <div class="login_page">
+    <div class="login_container">
+      <h2 class="login_heading">Admin Login</h2>
+
+      <!-- Secure login form -->
+      <form id="login_form" autocomplete="off">
+        <div class="login_form-group">
+          <label for="login_username" class="login_label">Email</label>
+          <input id="login_username" class="login_input" type="email" placeholder="Enter email" required autocomplete="off">
+        </div>
+
+        <div class="login_form-group">
+          <label for="login_password" class="login_label">Password</label>
+          <!-- dummy hidden input to trick browser autofill -->
+          <input type="password" style="display:none">
+          <input id="login_password" class="login_input" type="password" placeholder="Enter password" required autocomplete="new-password">
+          <div style="margin-top:5px;">
+            <input type="checkbox" id="show_password">
+            <label for="show_password" class="show_password_label">Show Password</label>
+          </div>
+        </div>
+
+        <button type="submit" class="login_btn">Login</button>
+        <button type="button" id="back_btn" class="login_btn back_btn">Back</button>
+      </form>
+
+      <p id="login_error" class="login_error-msg"></p>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE_URL = "http://localhost:5000/api";
+
+    const loginForm = document.getElementById("login_form");
+    const loginError = document.getElementById("login_error");
+    const passwordInput = document.getElementById("login_password");
+    const showPasswordCheckbox = document.getElementById("show_password");
+    const backBtn = document.getElementById("back_btn");
+
+    // Show/hide password toggle
+    showPasswordCheckbox.addEventListener("change", () => {
+      passwordInput.type = showPasswordCheckbox.checked ? "text" : "password";
+    });
+
+    // Login form submit
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("login_username").value.trim();
+      const pass = passwordInput.value;
+
+      try {
+        loginError.textContent = "";
+
+        const response = await fetch(`${API_BASE_URL}/auth/login`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            email,
+            password: pass
+          })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.message || "Invalid email or password!");
+        }
+
+        localStorage.setItem("authToken", result.data.token);
+        localStorage.setItem("authUser", JSON.stringify(result.data.user));
+        window.location.href = "workers.html";
+      } catch (error) {
+        loginError.textContent = error.message || "Unable to login right now.";
+        setTimeout(() => {
+          loginError.textContent = "";
+        }, 3000);
+      }
+    });
+
+    // Back button click
+    backBtn.addEventListener("click", () => {
+      window.location.href = "index.html";
+    });
+  </script>
+</body>
+</html>
